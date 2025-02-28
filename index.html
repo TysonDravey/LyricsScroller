@@ -4,251 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gig Lyrics Scroller</title>
-    <style>
-        :root {
-            --primary-color: #2196F3;
-            --secondary-color: #4CAF50;
-            --danger-color: #f44336;
-            --text-color: #333;
-            --background-color: #f5f5f5;
-            --card-color: #fff;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--background-color);
-        }
-
-        /* Dark mode */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --text-color: #f0f0f0;
-                --background-color: #121212;
-                --card-color: #1e1e1e;
-            }
-        }
-
-        .container {
-            max-width: 100%;
-            padding: 15px;
-            margin: 0 auto;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            color: white;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-        }
-
-        .btn-success {
-            background-color: var(--secondary-color);
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-
-        .song-list {
-            list-style: none;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .song-item {
-            background-color: var(--card-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .song-title {
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .song-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .song-detail {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .back-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .controls {
-            background-color: var(--card-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .control-row {
-            margin-bottom: 15px;
-        }
-
-        .control-label {
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .slider {
-            width: 100%;
-        }
-
-        .lyrics-container {
-            flex: 1;
-            background-color: var(--card-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .lyrics-scroll {
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        .lyrics {
-            white-space: pre-wrap;
-            padding: 10px;
-        }
-
-        .edit-form {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            background-color: var(--card-color);
-            color: var(--text-color);
-        }
-
-        textarea.form-control {
-            resize: none;
-            flex: 1;
-            min-height: 200px;
-        }
-
-        .btn-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-
-        .fullscreen-mode .controls,
-        .fullscreen-mode header {
-            display: none;
-        }
-
-        .fullscreen-mode .lyrics-container {
-            margin-bottom: 0;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #888;
-        }
-
-        @media screen and (max-width: 768px) {
-            header h1 {
-                font-size: 20px;
-            }
-            
-            .btn {
-                padding: 6px 12px;
-                font-size: 14px;
-            }
-        }
-
-        @media screen and (orientation: landscape) {
-            .lyrics {
-                display: inline-block;
-                min-width: 100%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <!-- Song List View -->
-    <div id="song-list-view" class="container">
+    <!-- Main Navigation View -->
+    <div id="main-view" class="container">
         <header>
             <h1>Gig Lyrics Scroller</h1>
-            <button id="add-song-btn" class="btn btn-success">+ Add Song</button>
         </header>
-        <div id="empty-state" class="empty-state">
-            <p>No songs yet. Tap "Add Song" to get started!</p>
+
+        <div class="tabs">
+            <div id="songs-tab" class="tab active">Songs</div>
+            <div id="setlists-tab" class="tab">Setlists</div>
         </div>
-        <ul id="song-list" class="song-list"></ul>
+
+        <!-- Songs List Tab -->
+        <div id="songs-content" class="tab-content">
+            <div class="setlist-header">
+                <h2>My Songs</h2>
+                <button id="add-song-btn" class="btn btn-success">+ Add Song</button>
+            </div>
+
+            <div id="songs-empty-state" class="empty-state">
+                <p>No songs yet. Tap "Add Song" to get started!</p>
+            </div>
+            <ul id="songs-list" class="song-list"></ul>
+        </div>
+
+        <!-- Setlists Tab -->
+        <div id="setlists-content" class="tab-content hidden">
+            <div class="setlist-header">
+                <h2>My Setlists</h2>
+                <button id="add-setlist-btn" class="btn btn-success">+ New Setlist</button>
+            </div>
+
+            <div id="setlists-empty-state" class="empty-state">
+                <p>No setlists yet. Tap "New Setlist" to create one!</p>
+            </div>
+            <ul id="setlists-list" class="song-list"></ul>
+        </div>
+    </div>
+
+    <!-- Setlist Detail View -->
+    <div id="setlist-detail-view" class="container hidden">
+        <header>
+            <a href="#" id="setlist-back-btn" class="back-link">← Back</a>
+            <h1 id="setlist-title">Setlist Name</h1>
+            <button id="edit-setlist-btn" class="btn btn-primary">Edit</button>
+        </header>
+
+        <div id="setlist-detail-empty" class="empty-state">
+            <p>No songs in this setlist yet. Tap "Edit" to add songs.</p>
+        </div>
+
+        <ul id="setlist-songs" class="setlist-songs"></ul>
+
+        <div class="btn-bar">
+            <button id="start-gig-btn" class="btn btn-success">Start Gig</button>
+        </div>
+    </div>
+
+    <!-- Setlist Edit View -->
+    <div id="setlist-edit-view" class="container hidden">
+        <header>
+            <a href="#" id="setlist-edit-back-btn" class="back-link">Cancel</a>
+            <h1 id="setlist-edit-title">Edit Setlist</h1>
+            <button id="save-setlist-btn" class="btn btn-success">Save</button>
+        </header>
+
+        <div class="form-group">
+            <label for="setlist-name-input">Setlist Name:</label>
+            <input type="text" id="setlist-name-input" class="form-control" placeholder="Enter setlist name">
+        </div>
+
+        <h3>Songs in Setlist:</h3>
+        <p class="small-text">Drag to reorder</p>
+        <ul id="setlist-edit-songs" class="setlist-songs"></ul>
+
+        <div id="available-songs-section">
+            <h3>Add Songs:</h3>
+            <ul id="available-songs" class="song-list"></ul>
+        </div>
     </div>
 
     <!-- Song Detail View -->
@@ -259,10 +96,11 @@
                 <h1 id="song-title">Song Title</h1>
                 <button id="edit-song-btn" class="btn btn-primary">Edit</button>
             </header>
+            
             <div id="controls" class="controls">
                 <div class="control-row">
-                    <label for="scroll-speed" class="control-label">Scroll Speed: <span id="speed-value">30</span>s</label>
-                    <input type="range" id="scroll-speed" class="slider" min="10" max="120" value="30">
+                    <label for="scroll-speed" class="control-label">Scroll Speed: <span id="speed-value">5</span></label>
+                    <input type="range" id="scroll-speed" class="slider" min="1" max="10" value="5">
                 </div>
                 <div class="control-row">
                     <label for="font-size" class="control-label">Font Size: <span id="font-size-value">18</span>pt</label>
@@ -270,12 +108,42 @@
                 </div>
                 <button id="start-scroll-btn" class="btn btn-primary">Start Scrolling</button>
             </div>
+            
             <div class="lyrics-container">
                 <div id="lyrics-scroll" class="lyrics-scroll">
                     <pre id="lyrics-text" class="lyrics"></pre>
                 </div>
             </div>
-            <button id="stop-scroll-btn" class="btn btn-danger hidden">Stop Scrolling</button>
+        </div>
+    </div>
+
+    <!-- Gig Performance View -->
+    <div id="gig-view" class="container hidden">
+        <header>
+            <a href="#" id="exit-gig-btn" class="back-link">Exit Gig</a>
+            <h1 id="gig-song-title">Song Title</h1>
+            <span id="song-position">1/10</span>
+        </header>
+
+        <div class="nav-controls">
+            <button id="prev-song-btn" class="btn btn-primary">← Previous</button>
+            <button id="next-song-btn" class="btn btn-primary">Next →</button>
+        </div>
+        
+        <div class="lyrics-container">
+            <div id="gig-lyrics-scroll" class="lyrics-scroll">
+                <pre id="gig-lyrics-text" class="lyrics"></pre>
+            </div>
+        </div>
+
+        <div class="btn-bar">
+            <button id="gig-scroll-btn" class="btn btn-success">Start Scrolling</button>
+        </div>
+
+        <div id="scroll-controls" class="scroll-controls hidden">
+            <button id="scroll-slower-btn" class="btn btn-warning">Slower</button>
+            <button id="scroll-stop-btn" class="btn btn-danger">Stop</button>
+            <button id="scroll-faster-btn" class="btn btn-warning">Faster</button>
         </div>
     </div>
 
@@ -298,324 +166,11 @@
         </div>
     </div>
 
-    <script>
-        // DOM Elements
-        const songListView = document.getElementById('song-list-view');
-        const songDetailView = document.getElementById('song-detail-view');
-        const songEditView = document.getElementById('song-edit-view');
-        const songList = document.getElementById('song-list');
-        const emptyState = document.getElementById('empty-state');
-        const songTitleElement = document.getElementById('song-title');
-        const lyricsText = document.getElementById('lyrics-text');
-        const lyricsScroll = document.getElementById('lyrics-scroll');
-        const addSongBtn = document.getElementById('add-song-btn');
-        const backBtn = document.getElementById('back-btn');
-        const editSongBtn = document.getElementById('edit-song-btn');
-        const startScrollBtn = document.getElementById('start-scroll-btn');
-        const stopScrollBtn = document.getElementById('stop-scroll-btn');
-        const scrollSpeedSlider = document.getElementById('scroll-speed');
-        const speedValue = document.getElementById('speed-value');
-        const fontSizeSlider = document.getElementById('font-size');
-        const fontSizeValue = document.getElementById('font-size-value');
-        const songTitleInput = document.getElementById('song-title-input');
-        const songLyricsInput = document.getElementById('song-lyrics-input');
-        const saveBtn = document.getElementById('save-song-btn');
-        const cancelEditBtn = document.getElementById('cancel-edit-btn');
-        const editTitle = document.getElementById('edit-title');
-
-        // Sample song data
-        const initialSongs = [
-            {
-                id: '1',
-                title: 'Sample Song',
-                lyrics: `This is the first verse of your song.
-These are placeholder lyrics for demonstration.
-You'll replace these with your actual lyrics.
-This is where your chorus would go.
-
-This is the second verse of your song.
-Continue with more placeholder text here.
-Another line for your performance.
-Back to the chorus section again.
-
-And here's another verse so you can see scrolling in action
-Line after line of lyrics will move up the screen
-As the song progresses through each section
-You can adjust the scroll speed for each particular song`,
-                scrollSpeed: 30,
-                fontSize: 18
-            }
-        ];
-
-        // Application state
-        let songs = [];
-        let currentSongIndex = null;
-        let isScrolling = false;
-        let scrollInterval = null;
-        let editingIndex = null;
-
-        // Load songs from local storage
-        function loadSongs() {
-            const storedSongs = localStorage.getItem('gig-lyrics-songs');
-            if (storedSongs) {
-                songs = JSON.parse(storedSongs);
-            } else {
-                songs = initialSongs;
-                saveSongs();
-            }
-            renderSongList();
-        }
-
-        // Save songs to local storage
-        function saveSongs() {
-            localStorage.setItem('gig-lyrics-songs', JSON.stringify(songs));
-        }
-
-        // Render song list
-        function renderSongList() {
-            songList.innerHTML = '';
-            if (songs.length === 0) {
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                songs.forEach((song, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'song-item';
-                    li.innerHTML = `
-                        <span class="song-title">${song.title}</span>
-                        <div class="song-actions">
-                            <button class="btn btn-primary edit-btn">Edit</button>
-                            <button class="btn btn-danger delete-btn">Delete</button>
-                        </div>
-                    `;
-                    li.querySelector('.edit-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        editSong(index);
-                    });
-                    li.querySelector('.delete-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        deleteSong(index);
-                    });
-                    li.addEventListener('click', () => showSongDetail(index));
-                    songList.appendChild(li);
-                });
-            }
-        }
-
-        // Show song detail view
-        function showSongDetail(index) {
-            currentSongIndex = index;
-            const song = songs[index];
-            songTitleElement.textContent = song.title;
-            lyricsText.textContent = song.lyrics;
-            lyricsText.style.fontSize = `${song.fontSize}px`;
-            scrollSpeedSlider.value = song.scrollSpeed;
-            speedValue.textContent = song.scrollSpeed;
-            fontSizeSlider.value = song.fontSize;
-            fontSizeValue.textContent = song.fontSize;
-            
-            songListView.classList.add('hidden');
-            songDetailView.classList.remove('hidden');
-            songEditView.classList.add('hidden');
-            
-            // Reset scroll position
-            lyricsScroll.scrollTop = 0;
-        }
-
-        // Show song list view
-        function showSongListView() {
-            stopScrolling();
-            songListView.classList.remove('hidden');
-            songDetailView.classList.add('hidden');
-            songEditView.classList.add('hidden');
-            currentSongIndex = null;
-        }
-
-        // Add new song
-        function addNewSong() {
-            editingIndex = null;
-            songTitleInput.value = '';
-            songLyricsInput.value = '';
-            editTitle.textContent = 'Add New Song';
-            
-            songListView.classList.add('hidden');
-            songDetailView.classList.add('hidden');
-            songEditView.classList.remove('hidden');
-        }
-
-        // Edit existing song
-        function editSong(index) {
-            editingIndex = index;
-            const song = songs[index];
-            songTitleInput.value = song.title;
-            songLyricsInput.value = song.lyrics;
-            editTitle.textContent = 'Edit Song';
-            
-            songListView.classList.add('hidden');
-            songDetailView.classList.add('hidden');
-            songEditView.classList.remove('hidden');
-        }
-
-        // Save song
-        function saveSong() {
-            const title = songTitleInput.value.trim();
-            const lyrics = songLyricsInput.value;
-            
-            if (!title) {
-                alert('Please enter a song title');
-                return;
-            }
-            
-            if (editingIndex !== null) {
-                // Update existing song
-                songs[editingIndex].title = title;
-                songs[editingIndex].lyrics = lyrics;
-            } else {
-                // Add new song
-                const newSong = {
-                    id: Date.now().toString(),
-                    title: title,
-                    lyrics: lyrics,
-                    scrollSpeed: 30,
-                    fontSize: 18
-                };
-                songs.push(newSong);
-            }
-            
-            saveSongs();
-            renderSongList();
-            showSongListView();
-        }
-
-        // Delete song
-        function deleteSong(index) {
-            if (confirm(`Are you sure you want to delete "${songs[index].title}"?`)) {
-                songs.splice(index, 1);
-                saveSongs();
-                renderSongList();
-            }
-        }
-
-        // Start scrolling
-        function startScrolling() {
-            if (currentSongIndex === null) return;
-            
-            isScrolling = true;
-            document.body.classList.add('fullscreen-mode');
-            stopScrollBtn.classList.remove('hidden');
-            
-            const song = songs[currentSongIndex];
-            const scrollHeight = lyricsScroll.scrollHeight - lyricsScroll.clientHeight;
-            const scrollDuration = song.scrollSpeed * 1000; // ms
-            const scrollStep = scrollHeight / (scrollDuration / 16); // for 60fps approx
-            
-            let startTime = null;
-            
-            function scroll(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const elapsed = timestamp - startTime;
-                const scrollPosition = (elapsed / scrollDuration) * scrollHeight;
-                
-                lyricsScroll.scrollTop = scrollPosition;
-                
-                if (scrollPosition < scrollHeight && isScrolling) {
-                    requestAnimationFrame(scroll);
-                } else {
-                    stopScrolling();
-                }
-            }
-            
-            requestAnimationFrame(scroll);
-        }
-
-        // Stop scrolling
-        function stopScrolling() {
-            isScrolling = false;
-            document.body.classList.remove('fullscreen-mode');
-            stopScrollBtn.classList.add('hidden');
-        }
-
-        // Update scroll speed
-        function updateScrollSpeed() {
-            const value = scrollSpeedSlider.value;
-            speedValue.textContent = value;
-            if (currentSongIndex !== null) {
-                songs[currentSongIndex].scrollSpeed = parseInt(value);
-                saveSongs();
-            }
-        }
-
-        // Update font size
-        function updateFontSize() {
-            const value = fontSizeSlider.value;
-            fontSizeValue.textContent = value;
-            if (currentSongIndex !== null) {
-                songs[currentSongIndex].fontSize = parseInt(value);
-                lyricsText.style.fontSize = `${value}px`;
-                saveSongs();
-            }
-        }
-
-        // Event listeners
-        addSongBtn.addEventListener('click', addNewSong);
-        backBtn.addEventListener('click', showSongListView);
-        editSongBtn.addEventListener('click', () => editSong(currentSongIndex));
-        startScrollBtn.addEventListener('click', startScrolling);
-        stopScrollBtn.addEventListener('click', stopScrolling);
-        saveBtn.addEventListener('click', saveSong);
-        cancelEditBtn.addEventListener('click', showSongListView);
-        scrollSpeedSlider.addEventListener('input', updateScrollSpeed);
-        fontSizeSlider.addEventListener('input', updateFontSize);
-
-        // Handle swipe for next song
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        songDetailView.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        songDetailView.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-        
-        function handleSwipe() {
-            const swipeThreshold = 100;
-            if (touchStartX - touchEndX > swipeThreshold && currentSongIndex !== null) {
-                // Swiped left, go to next song
-                if (currentSongIndex < songs.length - 1) {
-                    showSongDetail(currentSongIndex + 1);
-                }
-            } else if (touchEndX - touchStartX > swipeThreshold && currentSongIndex !== null) {
-                // Swiped right, go to previous song
-                if (currentSongIndex > 0) {
-                    showSongDetail(currentSongIndex - 1);
-                }
-            }
-        }
-
-        // Initialize app
-        loadSongs();
-
-        // Handle orientation changes
-        window.addEventListener('orientationchange', () => {
-            if (currentSongIndex !== null) {
-                const song = songs[currentSongIndex];
-                lyricsText.style.fontSize = `${song.fontSize}px`;
-            }
-        });
-
-        // Enable PWA capability
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js').then(registration => {
-                    console.log('ServiceWorker registration successful');
-                }).catch(error => {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
-            });
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="data.js"></script>
+    <script src="songs.js"></script>
+    <script src="setlists.js"></script>
+    <script src="scroller.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
