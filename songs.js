@@ -177,5 +177,54 @@ function setupSongEvents() {
     cancelEditBtn.addEventListener('click', showMainView);
     scrollSpeedSlider.addEventListener('input', updateScrollSpeed);
     fontSizeSlider.addEventListener('input', updateFontSize);
-    startScrollBtn.addEventListener('click', startSongScrolling);
+    
+    // The function is defined in scroller.js, so we'll make sure it's properly referenced
+    // Option 1: If you want to use the one from scroller.js
+    if (typeof startSongScrolling === 'function') {
+        startScrollBtn.addEventListener('click', startSongScrolling);
+    } else {
+        console.error('startSongScrolling is not defined. Check your script loading order.');
+    }
+    
+    // Option 2: Add the function here if you want to keep it separate
+    startScrollBtn.addEventListener('click', function() {
+        if (isScrolling) return;
+        
+        isScrolling = true;
+        
+        // Calculate scroll parameters
+        const scrollHeight = lyricsScroll.scrollHeight - lyricsScroll.clientHeight;
+        const song = songs[currentSongIndex];
+        const pixelsPerSecond = BASE_SCROLL_SPEED * song.scrollSpeed;
+        
+        let lastTimestamp = null;
+        
+        function animateScroll(timestamp) {
+            if (!isScrolling) return;
+            
+            if (!lastTimestamp) {
+                lastTimestamp = timestamp;
+            }
+            
+            const elapsed = timestamp - lastTimestamp;
+            const pixelsToScroll = (elapsed / 1000) * pixelsPerSecond;
+            
+            lyricsScroll.scrollTop += pixelsToScroll;
+            
+            lastTimestamp = timestamp;
+            
+            // Continue scrolling if not at the end
+            if (lyricsScroll.scrollTop < scrollHeight) {
+                scrollAnimationId = requestAnimationFrame(animateScroll);
+            } else {
+                isScrolling = false;
+                if (scrollAnimationId) {
+                    cancelAnimationFrame(scrollAnimationId);
+                    scrollAnimationId = null;
+                }
+            }
+        }
+        
+        scrollAnimationId = requestAnimationFrame(animateScroll);
+    });
 }

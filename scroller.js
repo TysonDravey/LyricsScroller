@@ -16,7 +16,7 @@ const scrollFasterBtn = document.getElementById('scroll-faster-btn');
 // Base scroll speed in pixels per second
 const BASE_SCROLL_SPEED = 30;
 //let currentScrollSpeed = 5; // Multiplier for base speed
-let scrollAnimationId = null;
+// Remove this line: let scrollAnimationId = null;
 
 // Show gig view and load current song
 function showGigView() {
@@ -115,43 +115,6 @@ function startGigScrolling() {
     scrollAnimationId = requestAnimationFrame(animateScroll);
 }
 
-// Same function for song detail view
-function startSongScrolling() {
-    if (isScrolling) return;
-    
-    isScrolling = true;
-    
-    // Calculate scroll parameters
-    const scrollHeight = lyricsScroll.scrollHeight - lyricsScroll.clientHeight;
-    const song = songs[currentSongIndex];
-    const pixelsPerSecond = BASE_SCROLL_SPEED * song.scrollSpeed;
-    
-    let lastTimestamp = null;
-    
-    function animateScroll(timestamp) {
-        if (!isScrolling) return;
-        
-        if (!lastTimestamp) {
-            lastTimestamp = timestamp;
-        }
-        
-        const elapsed = timestamp - lastTimestamp;
-        const pixelsToScroll = (elapsed / 1000) * pixelsPerSecond;
-        
-        lyricsScroll.scrollTop += pixelsToScroll;
-        
-        lastTimestamp = timestamp;
-        
-        // Continue scrolling if not at the end
-        if (lyricsScroll.scrollTop < scrollHeight) {
-            scrollAnimationId = requestAnimationFrame(animateScroll);
-        } else {
-            stopScrolling();
-        }
-    }
-    
-    scrollAnimationId = requestAnimationFrame(animateScroll);
-}
 
 // Stop scrolling
 function stopScrolling() {
