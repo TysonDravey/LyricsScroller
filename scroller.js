@@ -15,7 +15,7 @@ const scrollFasterBtn = document.getElementById('scroll-faster-btn');
 
 // Base scroll speed in pixels per second
 const BASE_SCROLL_SPEED = 30;
-let currentScrollSpeed = 5; // Multiplier for base speed
+//let currentScrollSpeed = 5; // Multiplier for base speed
 let scrollAnimationId = null;
 
 // Show gig view and load current song
