@@ -3,11 +3,7 @@ const dataExport = {
     // Export all app data to a JSON file
     exportData: function() {
         try {
-            // Gather all data from localStorage
-            const songs = JSON.parse(localStorage.getItem('songs') || '[]');
-            const setlists = JSON.parse(localStorage.getItem('setlists') || '[]');
-            
-            // Create export object
+            // Create export object using global variables
             const exportData = {
                 songs: songs,
                 setlists: setlists,
@@ -65,19 +61,19 @@ const dataExport = {
                     }
                     
                     // Ask for confirmation before overwriting existing data
-                    const currentSongs = JSON.parse(localStorage.getItem('songs') || '[]');
-                    const currentSetlists = JSON.parse(localStorage.getItem('setlists') || '[]');
-                    
-                    if (currentSongs.length > 0 || currentSetlists.length > 0) {
+                    if (songs.length > 0 || setlists.length > 0) {
                         if (!confirm('This will replace your existing songs and setlists. Continue?')) {
                             reject(new Error('Import cancelled by user'));
                             return;
                         }
                     }
                     
-                    // Save the imported data
-                    localStorage.setItem('songs', JSON.stringify(data.songs));
-                    localStorage.setItem('setlists', JSON.stringify(data.setlists));
+                    // Update the global variables
+                    songs = data.songs;
+                    setlists = data.setlists;
+                    
+                    // Save the data using your app's existing saveData function
+                    saveData();
                     
                     // Resolve with import stats
                     resolve({

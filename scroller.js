@@ -15,9 +15,8 @@ const scrollFasterBtn = document.getElementById('scroll-faster-btn');
 
 // Base scroll speed in pixels per second
 const BASE_SCROLL_SPEED = 30;
-let currentScrollSpeed = 5; // Multiplier for base speed
-let scrollAnimationId = null; // Add missing declaration
-let isScrolling = false; // Add missing declaration
+// Note: we're now using the global variables defined in data.js:
+// isScrolling, scrollAnimationId, currentScrollSpeed
 
 // Show gig view and load current song
 function showGigView() {
@@ -77,7 +76,7 @@ function goToNextSong() {
     }
 }
 
-// Start scrolling lyrics in the gig view - RENAMED from startSongScrolling to startGigScrolling
+// Start scrolling lyrics in the gig view
 function startGigScrolling() {
     console.log('startGigScrolling function called');
     if (isScrolling) return;
@@ -151,7 +150,7 @@ function setupScrollerEvents() {
     exitGigBtn.addEventListener('click', exitGig);
     prevSongBtn.addEventListener('click', goToPreviousSong);
     nextSongBtn.addEventListener('click', goToNextSong);
-    gigScrollBtn.addEventListener('click', startGigScrolling); // Fixed function name
+    gigScrollBtn.addEventListener('click', startGigScrolling);
     
     // Scroll controls
     scrollSlowerBtn.addEventListener('click', () => adjustScrollSpeed(-1));
@@ -187,7 +186,7 @@ function setupScrollerEvents() {
     });
 }
 
-// Make sure to call this function when the DOM is loaded
+// Initialize scroller events when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     setupScrollerEvents();
     console.log('Scroller events have been set up.');
