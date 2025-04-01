@@ -3,16 +3,27 @@ const dataExport = {
     // Export all app data to a JSON file
     exportData: function() {
         try {
-            // Create export object using global variables
+            // Debug - check what's in localStorage directly
+            const storedSongs = localStorage.getItem('gig-lyrics-songs');
+            const storedSetlists = localStorage.getItem('gig-lyrics-setlists');
+            
+            console.log("LocalStorage songs:", storedSongs ? JSON.parse(storedSongs) : "None");
+            console.log("LocalStorage setlists:", storedSetlists ? JSON.parse(storedSetlists) : "None");
+            
+            // Create export object directly from localStorage instead of global variables
+            // This ensures we're getting the most up-to-date data
             const exportData = {
-                songs: songs,
-                setlists: setlists,
+                songs: storedSongs ? JSON.parse(storedSongs) : [],
+                setlists: storedSetlists ? JSON.parse(storedSetlists) : [],
                 version: '1.0',
                 exportDate: new Date().toISOString()
             };
             
             // Convert to JSON string
             const jsonData = JSON.stringify(exportData, null, 2);
+            
+            // Log what we're exporting
+            console.log("Exporting data:", exportData);
             
             // Create download link
             const blob = new Blob([jsonData], { type: 'application/json' });
@@ -53,6 +64,7 @@ const dataExport = {
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
+                    console.log("Imported data:", data);
                     
                     // Validate data format
                     if (!data.songs || !Array.isArray(data.songs) || !data.setlists || !Array.isArray(data.setlists)) {
@@ -61,31 +73,31 @@ const dataExport = {
                     }
                     
                     // Ask for confirmation before overwriting existing data
-                    if (songs.length > 0 || setlists.length > 0) {
+                    const storedSongs = localStorage.getItem('gig-lyrics-songs');
+                    const storedSetlists = localStorage.getItem('gig-lyrics-setlists');
+                    const hasSongs = storedSongs && JSON.parse(storedSongs).length > 0;
+                    const hasSetlists = storedSetlists && JSON.parse(storedSetlists).length > 0;
+                    
+                    if (hasSongs || hasSetlists) {
                         if (!confirm('This will replace your existing songs and setlists. Continue?')) {
                             reject(new Error('Import cancelled by user'));
                             return;
                         }
                     }
                     
-                    // Update the global variables
-                    songs = data.songs;
-                    setlists = data.setlists;
+                    // Save the imported data directly to localStorage
+                    localStorage.setItem('gig-lyrics-songs', JSON.stringify(data.songs));
+                    localStorage.setItem('gig-lyrics-setlists', JSON.stringify(data.setlists));
                     
-                    // Save the data using your app's existing saveData function
-                    saveData();
+                    // Reload the page to refresh all data
+                    alert(`Import successful! Loaded ${data.songs.length} songs and ${data.setlists.length} setlists. The page will now reload.`);
+                    window.location.reload();
                     
-                    // Resolve with import stats
                     resolve({
                         songs: data.songs.length,
                         setlists: data.setlists.length,
                         importDate: data.exportDate || 'Unknown'
                     });
-                    
-                    alert(`Import successful! Loaded ${data.songs.length} songs and ${data.setlists.length} setlists.`);
-                    
-                    // Reload the page to show the imported data
-                    window.location.reload();
                 } catch (error) {
                     console.error('Import failed:', error);
                     reject(error);
@@ -126,25 +138,30 @@ function setupExportImportUI() {
     
     // Add to the main view
     const mainView = document.getElementById('main-view');
-    mainView.appendChild(container);
-    
-    // Set up event listeners
-    document.getElementById('export-btn').addEventListener('click', () => {
-        dataExport.exportData();
-    });
-    
-    document.getElementById('import-file').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            dataExport.importData(file).catch(error => {
-                console.error('Import error:', error);
-            });
-        }
-    });
+    if (mainView) {
+        mainView.appendChild(container);
+        
+        // Set up event listeners
+        document.getElementById('export-btn').addEventListener('click', dataExport.exportData);
+        
+        document.getElementById('import-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                dataExport.importData(file).catch(error => {
+                    console.error('Import error:', error);
+                });
+            }
+        });
+    } else {
+        console.error("Main view element not found. Export/Import UI not added.");
+    }
 }
 
 // Initialize export/import when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    setupExportImportUI();
-    console.log('Export/Import functionality initialized.');
+    // Wait a bit to ensure the main app is initialized first
+    setTimeout(() => {
+        setupExportImportUI();
+        console.log('Export/Import functionality initialized.');
+    }, 1000);
 });
