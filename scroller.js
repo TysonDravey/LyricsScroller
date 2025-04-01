@@ -11,16 +11,14 @@ const scrollSlowerBtn = document.getElementById('scroll-slower-btn');
 const scrollStopBtn = document.getElementById('scroll-stop-btn');
 const scrollFasterBtn = document.getElementById('scroll-faster-btn');
 
-// Base scroll speed in pixels per second - now with more granularity
-const BASE_SCROLL_SPEED = 10; // Reduced base speed for finer control
-const MIN_SPEED = 1;
-const MAX_SPEED = 20; // Increased range
-let currentScrollDelay = 0; // Intro delay in seconds
+// Base scroll speed and control variables
+const BASE_SCROLL_SPEED = 30;
+let currentScrollSpeed = 5; // Multiplier for base speed
+let isScrolling = false;
+let scrollAnimationId = null;
+let globalFontSize = 18; // Default font size for all songs
 
-// Global preferences
-let globalFontSize = 18; // Default font size
-
-// Load global preferences
+// Load global preferences if they exist
 function loadGlobalPreferences() {
     const storedPrefs = localStorage.getItem('gig-lyrics-preferences');
     if (storedPrefs) {
@@ -37,72 +35,146 @@ function saveGlobalPreferences() {
     localStorage.setItem('gig-lyrics-preferences', JSON.stringify(prefs));
 }
 
+// Initialize scroller when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing scroller...');
+    loadGlobalPreferences();
+    setupScrollerEvents();
+    hideNavButtons();
+    
+    // Add global font size control to main view if it doesn't exist
+    if (!document.getElementById('global-font-size')) {
+        addGlobalFontSizeControl();
+    }
+});
+
+// Hide the previous/next buttons
+function hideNavButtons() {
+    const navControls = document.querySelector('.nav-controls');
+    if (navControls) {
+        navControls.style.display = 'none';
+        console.log('Navigation buttons hidden');
+    }
+}
+
+// Add global font size control to main view
+function addGlobalFontSizeControl() {
+    const mainView = document.getElementById('main-view');
+    if (!mainView) return;
+    
+    const container = document.createElement('div');
+    container.className = 'font-size-control';
+    container.style.padding = '15px';
+    container.style.marginTop = '20px';
+    container.style.borderTop = '1px solid #ccc';
+    
+    container.innerHTML = `
+        <h3>Display Settings</h3>
+        <div class="control-row">
+            <label for="global-font-size" class="control-label">Font Size: <span id="font-size-display">${globalFontSize}</span>pt</label>
+            <input type="range" id="global-font-size" class="slider" min="12" max="36" value="${globalFontSize}">
+        </div>
+    `;
+    
+    mainView.appendChild(container);
+    
+    // Set up font size slider
+    const fontSizeSlider = document.getElementById('global-font-size');
+    if (fontSizeSlider) {
+        fontSizeSlider.addEventListener('input', function() {
+            globalFontSize = parseInt(this.value);
+            document.getElementById('font-size-display').textContent = globalFontSize;
+            saveGlobalPreferences();
+        });
+    }
+}
+
 // Show gig view and load current song
 function showGigView() {
-    if (!currentGigSetlist || currentGigSetlist.songs.length === 0) return;
+    console.log('showGigView called');
     
-    loadGlobalPreferences();
+    if (!currentGigSetlist || currentGigSetlist.songs.length === 0) {
+        console.error('No setlist or empty setlist');
+        return;
+    }
+    
+    // Load the first song
     loadGigSong(currentGigSongIndex);
     
+    // Hide setlist view, show gig view
     setlistDetailView.classList.add('hidden');
     gigView.classList.remove('hidden');
     
-    updateGigNavigation();
+    // Ensure navigation buttons are hidden
+    hideNavButtons();
+    
+    // Fix scrolling button position
+    fixScrollButtonPosition();
+    
+    console.log('Gig view displayed');
+}
+
+// Fix the position of the scrolling button
+function fixScrollButtonPosition() {
+    const btnBar = document.querySelector('.btn-bar');
+    if (btnBar) {
+        btnBar.style.position = 'fixed';
+        btnBar.style.bottom = '20px';
+        btnBar.style.left = '0';
+        btnBar.style.right = '0';
+        btnBar.style.textAlign = 'center';
+        btnBar.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        btnBar.style.padding = '10px';
+        btnBar.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.1)';
+        btnBar.style.zIndex = '100';
+    }
+    
+    const lyricsContainer = document.querySelector('.lyrics-container');
+    if (lyricsContainer) {
+        lyricsContainer.style.paddingBottom = '70px';
+    }
 }
 
 // Load song in gig view
 function loadGigSong(index) {
-    if (!currentGigSetlist || index < 0 || index >= currentGigSetlist.songs.length) return;
+    console.log(`Loading gig song at index: ${index}`);
     
+    if (!currentGigSetlist || index < 0 || index >= currentGigSetlist.songs.length) {
+        console.error('Invalid song index or no setlist');
+        return;
+    }
+    
+    // Stop any active scrolling
     stopScrolling();
     
+    // Update the current index
     currentGigSongIndex = index;
+    
+    // Get the song
     const songId = currentGigSetlist.songs[index];
     const song = getSongById(songId);
     
     if (song) {
+        // Update UI with song info
         gigSongTitle.textContent = song.title;
         gigLyricsText.textContent = song.lyrics;
         
-        // Apply global font size instead of song-specific
+        // Apply global font size
         gigLyricsText.style.fontSize = `${globalFontSize}px`;
         
-        // Use song-specific scroll speed (default to 5 if not set)
+        // Get song-specific scroll speed if available
         currentScrollSpeed = song.scrollSpeed || 5;
-        
-        // Apply song-specific intro delay (default to 0 if not set)
-        currentScrollDelay = song.introDelay || 0;
-        
-        // Display the current speed in the UI
-        updateSpeedDisplay();
         
         // Reset scroll position
         gigLyricsScroll.scrollTop = 0;
         
         // Update position indicator
         songPosition.textContent = `${index + 1}/${currentGigSetlist.songs.length}`;
+        
+        console.log(`Loaded song: ${song.title}`);
+    } else {
+        console.error(`Song not found with ID: ${songId}`);
     }
-}
-
-// Update the numeric speed display in the UI
-function updateSpeedDisplay() {
-    // Update the display if a speed display element exists
-    const speedDisplay = document.getElementById('current-speed-value');
-    if (speedDisplay) {
-        speedDisplay.textContent = currentScrollSpeed;
-    }
-    
-    // Update the delay display if it exists
-    const delayDisplay = document.getElementById('current-delay-value');
-    if (delayDisplay) {
-        delayDisplay.textContent = currentScrollDelay;
-    }
-}
-
-// Update navigation status (called for swipe navigation)
-function updateGigNavigation() {
-    // Since buttons are removed, this just updates any UI that reflects position
-    songPosition.textContent = `${currentGigSongIndex + 1}/${currentGigSetlist.songs.length}`;
 }
 
 // Navigate to previous song
@@ -121,25 +193,24 @@ function goToNextSong() {
 
 // Start scrolling lyrics in the gig view
 function startGigScrolling() {
-    console.log('startGigScrolling function called');
-    if (isScrolling) return;
+    console.log('Start gig scrolling called');
+    
+    if (isScrolling) {
+        console.log('Already scrolling, ignoring call');
+        return;
+    }
     
     isScrolling = true;
-    gigScrollBtn.classList.add('hidden');
+    
+    // Update UI
+    gigScrollBtn.textContent = 'Stop Scrolling';
     scrollControls.classList.remove('hidden');
     
     // Calculate scroll parameters
     const scrollHeight = gigLyricsScroll.scrollHeight - gigLyricsScroll.clientHeight;
+    const pixelsPerSecond = BASE_SCROLL_SPEED * currentScrollSpeed / 10; // Adjusted for smoother scrolling
     
     let lastTimestamp = null;
-    let delayTimeRemaining = currentScrollDelay * 1000; // Convert to milliseconds
-    
-    // Show countdown if there's a delay
-    const countdownDisplay = document.getElementById('delay-countdown');
-    if (countdownDisplay && delayTimeRemaining > 0) {
-        countdownDisplay.textContent = Math.ceil(delayTimeRemaining / 1000);
-        countdownDisplay.classList.remove('hidden');
-    }
     
     function animateScroll(timestamp) {
         if (!isScrolling) return;
@@ -149,34 +220,11 @@ function startGigScrolling() {
         }
         
         const elapsed = timestamp - lastTimestamp;
-        lastTimestamp = timestamp;
-        
-        // Handle intro delay
-        if (delayTimeRemaining > 0) {
-            delayTimeRemaining -= elapsed;
-            
-            // Update countdown display
-            if (countdownDisplay) {
-                countdownDisplay.textContent = Math.ceil(delayTimeRemaining / 1000);
-            }
-            
-            // Continue waiting if delay not finished
-            if (delayTimeRemaining > 0) {
-                scrollAnimationId = requestAnimationFrame(animateScroll);
-                return;
-            } else {
-                // Hide countdown when done
-                if (countdownDisplay) {
-                    countdownDisplay.classList.add('hidden');
-                }
-            }
-        }
-        
-        // Calculate pixels to scroll based on current speed
-        const pixelsPerSecond = BASE_SCROLL_SPEED * currentScrollSpeed;
         const pixelsToScroll = (elapsed / 1000) * pixelsPerSecond;
         
         gigLyricsScroll.scrollTop += pixelsToScroll;
+        
+        lastTimestamp = timestamp;
         
         // Continue scrolling if not at the end
         if (gigLyricsScroll.scrollTop < scrollHeight) {
@@ -187,10 +235,14 @@ function startGigScrolling() {
     }
     
     scrollAnimationId = requestAnimationFrame(animateScroll);
+    console.log('Scrolling started');
 }
 
 // Stop scrolling
 function stopScrolling() {
+    if (!isScrolling) return;
+    
+    console.log('Stopping scrolling');
     isScrolling = false;
     
     if (scrollAnimationId) {
@@ -198,147 +250,82 @@ function stopScrolling() {
         scrollAnimationId = null;
     }
     
-    // Hide countdown if visible
-    const countdownDisplay = document.getElementById('delay-countdown');
-    if (countdownDisplay) {
-        countdownDisplay.classList.add('hidden');
-    }
-    
     // Reset UI
-    gigScrollBtn.classList.remove('hidden');
+    gigScrollBtn.textContent = 'Start Scrolling';
     scrollControls.classList.add('hidden');
 }
 
 // Adjust scrolling speed
 function adjustScrollSpeed(delta) {
-    currentScrollSpeed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, currentScrollSpeed + delta));
+    // Change speed immediately even if scrolling
+    currentScrollSpeed = Math.max(1, Math.min(10, currentScrollSpeed + delta));
     console.log(`Scroll speed adjusted to: ${currentScrollSpeed}`);
     
-    // Update speed display
-    updateSpeedDisplay();
-    
-    // Save the speed to the song
-    const songId = currentGigSetlist.songs[currentGigSongIndex];
-    const songIndex = songs.findIndex(s => s.id === songId);
-    if (songIndex >= 0) {
-        songs[songIndex].scrollSpeed = currentScrollSpeed;
-        saveData();
-    }
-}
-
-// Adjust intro delay
-function adjustIntroDelay(delta) {
-    currentScrollDelay = Math.max(0, currentScrollDelay + delta);
-    console.log(`Intro delay adjusted to: ${currentScrollDelay} seconds`);
-    
-    // Update delay display
-    updateSpeedDisplay();
-    
-    // Save the delay to the song
-    const songId = currentGigSetlist.songs[currentGigSongIndex];
-    const songIndex = songs.findIndex(s => s.id === songId);
-    if (songIndex >= 0) {
-        songs[songIndex].introDelay = currentScrollDelay;
-        saveData();
+    // Save the speed to the current song
+    if (currentGigSetlist && currentGigSongIndex !== null) {
+        const songId = currentGigSetlist.songs[currentGigSongIndex];
+        const songIndex = songs.findIndex(s => s.id === songId);
+        if (songIndex >= 0) {
+            songs[songIndex].scrollSpeed = currentScrollSpeed;
+            saveData(); // Make sure this function exists in your code
+            console.log(`Saved scroll speed ${currentScrollSpeed} for song ${songs[songIndex].title}`);
+        }
     }
 }
 
 // Exit gig mode
 function exitGig() {
+    console.log('Exiting gig mode');
     stopScrolling();
     showSetlistDetail(currentSetlistIndex);
 }
 
-// Update the UI to show the new controls
-function createGigUI() {
-    // Add speed display and intro delay to the scroll controls
-    const controlsContainer = document.getElementById('scroll-controls');
-    if (!controlsContainer) return;
-    
-    // Clear existing content
-    controlsContainer.innerHTML = '';
-    
-    // Create speed controls
-    const speedControls = document.createElement('div');
-    speedControls.className = 'speed-controls control-group';
-    speedControls.innerHTML = `
-        <div class="control-label">Scroll Speed: <span id="current-speed-value">${currentScrollSpeed}</span></div>
-        <div class="control-buttons">
-            <button id="scroll-slower-btn" class="btn btn-warning">-</button>
-            <button id="scroll-stop-btn" class="btn btn-danger">Stop</button>
-            <button id="scroll-faster-btn" class="btn btn-warning">+</button>
-        </div>
-    `;
-    
-    // Create delay controls
-    const delayControls = document.createElement('div');
-    delayControls.className = 'delay-controls control-group';
-    delayControls.innerHTML = `
-        <div class="control-label">Intro Delay: <span id="current-delay-value">${currentScrollDelay}</span>s</div>
-        <div class="control-buttons">
-            <button id="delay-shorter-btn" class="btn btn-warning">-</button>
-            <button id="delay-longer-btn" class="btn btn-warning">+</button>
-        </div>
-    `;
-    
-    // Add countdown display
-    const countdownDisplay = document.createElement('div');
-    countdownDisplay.id = 'delay-countdown';
-    countdownDisplay.className = 'countdown-display hidden';
-    countdownDisplay.textContent = '0';
-    
-    // Add everything to the controls container
-    controlsContainer.appendChild(speedControls);
-    controlsContainer.appendChild(delayControls);
-    controlsContainer.appendChild(countdownDisplay);
-    
-    // Setup event listeners for the new buttons
-    document.getElementById('scroll-slower-btn').addEventListener('click', () => adjustScrollSpeed(-1));
-    document.getElementById('scroll-stop-btn').addEventListener('click', stopScrolling);
-    document.getElementById('scroll-faster-btn').addEventListener('click', () => adjustScrollSpeed(1));
-    document.getElementById('delay-shorter-btn').addEventListener('click', () => adjustIntroDelay(-1));
-    document.getElementById('delay-longer-btn').addEventListener('click', () => adjustIntroDelay(1));
-    
-    // Add additional styles to the page
-    const style = document.createElement('style');
-    style.textContent = `
-        .control-group {
-            margin-bottom: 15px;
-        }
-        .control-label {
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .control-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        .countdown-display {
-            font-size: 2rem;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 10px;
-            color: #e74c3c;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Remove the navigation buttons from the UI
-    const navControls = document.querySelector('.nav-controls');
-    if (navControls) {
-        navControls.remove();
-    }
-}
-
 // Setup gig navigation events
 function setupScrollerEvents() {
-    // Create the new UI
-    createGigUI();
+    console.log('Setting up scroller events');
+    
+    // Ensure the button has the correct event listener
+    if (gigScrollBtn) {
+        // Remove any existing listeners
+        gigScrollBtn.replaceWith(gigScrollBtn.cloneNode(true));
+        // Get the fresh element
+        const freshButton = document.getElementById('gig-scroll-btn');
+        
+        if (freshButton) {
+            freshButton.addEventListener('click', function() {
+                console.log('Scroll button clicked');
+                if (!isScrolling) {
+                    startGigScrolling();
+                } else {
+                    stopScrolling();
+                }
+            });
+            console.log('Added event listener to gig scroll button');
+        } else {
+            console.error('Could not find gig scroll button after cloning');
+        }
+    } else {
+        console.error('Gig scroll button not found');
+    }
     
     // Gig navigation
-    exitGigBtn.addEventListener('click', exitGig);
-    gigScrollBtn.addEventListener('click', startGigScrolling);
+    if (exitGigBtn) {
+        exitGigBtn.addEventListener('click', exitGig);
+        console.log('Added event listener to exit button');
+    }
+    
+    // Scroll controls
+    if (scrollSlowerBtn) {
+        scrollSlowerBtn.addEventListener('click', () => adjustScrollSpeed(-1));
+    }
+    
+    if (scrollStopBtn) {
+        scrollStopBtn.addEventListener('click', stopScrolling);
+    }
+    
+    if (scrollFasterBtn) {
+        scrollFasterBtn.addEventListener('click', () => adjustScrollSpeed(1));
+    }
     
     // Handle swipe for next/previous songs
     let touchStartX = 0;
@@ -353,46 +340,18 @@ function setupScrollerEvents() {
         
         if (touchStartX - touchEndX > swipeThreshold) {
             // Swiped left, go to next song
+            console.log('Swiped left, going to next song');
             goToNextSong();
         } else if (touchEndX - touchStartX > swipeThreshold) {
             // Swiped right, go to previous song
+            console.log('Swiped right, going to previous song');
             goToPreviousSong();
         }
     });
+    
+    console.log('Scroller events setup complete');
 }
 
-// Add font size settings to the app
-function addFontSizeSettings() {
-    // Add font size control to the app settings
-    const settingsContainer = document.createElement('div');
-    settingsContainer.className = 'settings-container';
-    settingsContainer.innerHTML = `
-        <h3>Global Settings</h3>
-        <div class="form-group">
-            <label for="global-font-size" class="control-label">Font Size: <span id="global-font-size-value">${globalFontSize}</span>pt</label>
-            <input type="range" id="global-font-size" class="slider" min="12" max="36" value="${globalFontSize}">
-        </div>
-    `;
-    
-    // Add the settings to the main view
-    const mainView = document.getElementById('main-view');
-    mainView.appendChild(settingsContainer);
-    
-    // Setup event listener for font size change
-    const fontSizeSlider = document.getElementById('global-font-size');
-    fontSizeSlider.addEventListener('input', function() {
-        globalFontSize = parseInt(this.value);
-        document.getElementById('global-font-size-value').textContent = globalFontSize;
-        saveGlobalPreferences();
-    });
-}
-
-// Initialize scroller events when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    loadGlobalPreferences();
-    setupScrollerEvents();
-    addFontSizeSettings();
-    console.log('Scroller events have been set up.');
-});
-
-console.log('scroller.js loaded successfully.');
+// This makes sure the function is globally available
+window.showGigView = showGigView;
+console.log('scroller.js loaded successfully, showGigView is now global');
