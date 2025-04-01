@@ -165,3 +165,25 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Export/Import functionality initialized.');
     }, 1000);
 });
+
+// Add this to the beginning of your exportData function
+let debugInfo = "";
+debugInfo += "Checking localStorage...\n";
+
+const storedSongs = localStorage.getItem('gig-lyrics-songs');
+const storedSetlists = localStorage.getItem('gig-lyrics-setlists');
+
+debugInfo += "Songs in storage: " + (storedSongs ? JSON.parse(storedSongs).length : "None") + "\n";
+debugInfo += "Setlists in storage: " + (storedSetlists ? JSON.parse(storedSetlists).length : "None") + "\n";
+
+// Create a debug element on the page
+const debugDiv = document.createElement('div');
+debugDiv.style.padding = '10px';
+debugDiv.style.margin = '10px';
+debugDiv.style.border = '1px solid red';
+debugDiv.style.backgroundColor = '#ffe0e0';
+debugDiv.style.whiteSpace = 'pre-wrap';
+debugDiv.textContent = debugInfo;
+
+// Add it to the page
+document.body.appendChild(debugDiv);
