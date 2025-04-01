@@ -15,8 +15,9 @@ const scrollFasterBtn = document.getElementById('scroll-faster-btn');
 
 // Base scroll speed in pixels per second
 const BASE_SCROLL_SPEED = 30;
-//let currentScrollSpeed = 5; // Multiplier for base speed
-// Remove this line: let scrollAnimationId = null;
+let currentScrollSpeed = 5; // Multiplier for base speed
+let scrollAnimationId = null; // Add missing declaration
+let isScrolling = false; // Add missing declaration
 
 // Show gig view and load current song
 function showGigView() {
@@ -43,7 +44,7 @@ function loadGigSong(index) {
     if (song) {
         gigSongTitle.textContent = song.title;
         gigLyricsText.textContent = song.lyrics;
-        gigLyricsText.style.fontSize = `${song.fontSize}px`;
+        gigLyricsText.style.fontSize = `${song.fontSize || 18}px`; // Default to 18px if not set
         currentScrollSpeed = song.scrollSpeed || 5;
         
         // Reset scroll position
@@ -76,8 +77,9 @@ function goToNextSong() {
     }
 }
 
-// Start scrolling lyrics in the gig view
+// Start scrolling lyrics in the gig view - RENAMED from startSongScrolling to startGigScrolling
 function startGigScrolling() {
+    console.log('startGigScrolling function called');
     if (isScrolling) return;
     
     isScrolling = true;
@@ -115,7 +117,6 @@ function startGigScrolling() {
     scrollAnimationId = requestAnimationFrame(animateScroll);
 }
 
-
 // Stop scrolling
 function stopScrolling() {
     isScrolling = false;
@@ -133,7 +134,7 @@ function stopScrolling() {
 // Adjust scrolling speed
 function adjustScrollSpeed(delta) {
     currentScrollSpeed = Math.max(1, Math.min(10, currentScrollSpeed + delta));
-    
+    console.log(`Scroll speed adjusted to: ${currentScrollSpeed}`);
     // If we're in the middle of scrolling, we don't need to restart
     // The next animation frame will use the new speed
 }
@@ -150,7 +151,7 @@ function setupScrollerEvents() {
     exitGigBtn.addEventListener('click', exitGig);
     prevSongBtn.addEventListener('click', goToPreviousSong);
     nextSongBtn.addEventListener('click', goToNextSong);
-    gigScrollBtn.addEventListener('click', startGigScrolling);
+    gigScrollBtn.addEventListener('click', startGigScrolling); // Fixed function name
     
     // Scroll controls
     scrollSlowerBtn.addEventListener('click', () => adjustScrollSpeed(-1));
@@ -185,3 +186,11 @@ function setupScrollerEvents() {
         }
     });
 }
+
+// Make sure to call this function when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    setupScrollerEvents();
+    console.log('Scroller events have been set up.');
+});
+
+console.log('scroller.js loaded successfully.');
