@@ -269,7 +269,33 @@ function startGig() {
     
     showGigView();
 }
-
+// Add this to setlists.js
+function showGigView() {
+    if (!currentGigSetlist || currentGigSetlist.songs.length === 0) return;
+    
+    // Make sure currentGigSongIndex is set
+    currentGigSongIndex = 0;
+    
+    // Load the first song
+    const songId = currentGigSetlist.songs[currentGigSongIndex];
+    const song = getSongById(songId);
+    
+    if (song) {
+        gigSongTitle.textContent = song.title;
+        gigLyricsText.textContent = song.lyrics;
+        gigLyricsText.style.fontSize = `${globalFontSize || 18}px`;
+        
+        // Reset scroll position
+        gigLyricsScroll.scrollTop = 0;
+        
+        // Update position indicator
+        songPosition.textContent = `${currentGigSongIndex + 1}/${currentGigSetlist.songs.length}`;
+    }
+    
+    // Show the gig view
+    setlistDetailView.classList.add('hidden');
+    gigView.classList.remove('hidden');
+}
 // Setup setlist events
 function setupSetlistEvents() {
     addSetlistBtn.addEventListener('click', addNewSetlist);
