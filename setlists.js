@@ -285,4 +285,42 @@ function setupSetlistEvents() {
     });
     saveSetlistBtn.addEventListener('click', saveSetlist);
     startGigBtn.addEventListener('click', startGig);
+    startGigBtn.addEventListener('click', debugGigStart);
 }
+
+// Add this to your app.js or in your browser console to debug
+function debugGigStart() {
+    console.log("Debug: Trying to start gig manually");
+    
+    // Check if currentSetlistIndex is valid
+    console.log("currentSetlistIndex:", currentSetlistIndex);
+    
+    // Try to get the setlist
+    const setlist = setlists[currentSetlistIndex];
+    console.log("Current setlist:", setlist);
+    
+    if (setlist) {
+        // Set up gig variables
+        currentGigSetlist = setlist;
+        currentGigSongIndex = 0;
+        
+        // Force show gig view
+        setlistDetailView.classList.add('hidden');
+        gigView.classList.remove('hidden');
+        
+        // Try to load the first song
+        console.log("Loading first song...");
+        const songId = setlist.songs[0];
+        const song = getSongById(songId);
+        console.log("First song:", song);
+        
+        if (song) {
+            gigSongTitle.textContent = song.title;
+            gigLyricsText.textContent = song.lyrics;
+            gigLyricsText.style.fontSize = `${globalFontSize || 18}px`;
+            songPosition.textContent = `1/${setlist.songs.length}`;
+        }
+    }
+}
+
+// You can call this function from your browser console or link it to the button
