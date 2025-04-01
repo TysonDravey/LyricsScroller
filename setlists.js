@@ -318,7 +318,7 @@ function setupSetlistEvents() {
     });
     saveSetlistBtn.addEventListener('click', saveSetlist);
     startGigBtn.addEventListener('click', startGig);
-    startGigBtn.addEventListener('click', debugGigStart);
+    //startGigBtn.addEventListener('click', debugGigStart);
 }
 
 // Add this to your app.js or in your browser console to debug
