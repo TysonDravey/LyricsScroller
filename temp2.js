@@ -1,30 +1,7 @@
-<!-- Update this section in your index.html -->
-
-<!-- Gig Performance View -->
-<div id="gig-view" class="container hidden">
-    <header>
-        <a href="#" id="exit-gig-btn" class="back-link">Exit Gig</a>
-        <h1 id="gig-song-title">Song Title</h1>
-        <span id="song-position">1/10</span>
-    </header>
-    
-    <!-- The navigation buttons div will be removed by the JS -->
-    <div class="nav-controls">
-        <button id="prev-song-btn" class="btn btn-primary">← Previous</button>
-        <button id="next-song-btn" class="btn btn-primary">Next →</button>
-    </div>
-    
-    <div class="lyrics-container">
-        <div id="gig-lyrics-scroll" class="lyrics-scroll">
-            <pre id="gig-lyrics-text" class="lyrics"></pre>
-        </div>
-    </div>
-
-    <div class="btn-bar">
-        <button id="gig-scroll-btn" class="btn btn-success">Start Scrolling</button>
-    </div>
-
-    <div id="scroll-controls" class="scroll-controls hidden">
-        <!-- This will be populated by JavaScript -->
-    </div>
-</div>
+// Add these DOM element definitions at the top of your setlists.js file
+// (Only add the ones that aren't already defined)
+const gigView = document.getElementById('gig-view');
+const gigSongTitle = document.getElementById('gig-song-title');
+const gigLyricsText = document.getElementById('gig-lyrics-text');
+const gigLyricsScroll = document.getElementById('gig-lyrics-scroll');
+const songPosition = document.getElementById('song-position');
