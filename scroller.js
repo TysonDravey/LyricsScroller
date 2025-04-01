@@ -11,156 +11,42 @@ const scrollSlowerBtn = document.getElementById('scroll-slower-btn');
 const scrollStopBtn = document.getElementById('scroll-stop-btn');
 const scrollFasterBtn = document.getElementById('scroll-faster-btn');
 
-// Base scroll speed and control variables
+// Base scroll speed in pixels per second
 const BASE_SCROLL_SPEED = 30;
 let currentScrollSpeed = 5; // Multiplier for base speed
 let isScrolling = false;
 let scrollAnimationId = null;
-let globalFontSize = 18; // Default font size for all songs
-
-// Load global preferences if they exist
-function loadGlobalPreferences() {
-    const storedPrefs = localStorage.getItem('gig-lyrics-preferences');
-    if (storedPrefs) {
-        const prefs = JSON.parse(storedPrefs);
-        globalFontSize = prefs.fontSize || 18;
-    }
-}
-
-// Save global preferences
-function saveGlobalPreferences() {
-    const prefs = {
-        fontSize: globalFontSize
-    };
-    localStorage.setItem('gig-lyrics-preferences', JSON.stringify(prefs));
-}
-
-// Initialize scroller when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing scroller...');
-    loadGlobalPreferences();
-    setupScrollerEvents();
-    hideNavButtons();
-    
-    // Add global font size control to main view if it doesn't exist
-    if (!document.getElementById('global-font-size')) {
-        addGlobalFontSizeControl();
-    }
-});
-
-// Hide the previous/next buttons
-function hideNavButtons() {
-    const navControls = document.querySelector('.nav-controls');
-    if (navControls) {
-        navControls.style.display = 'none';
-        console.log('Navigation buttons hidden');
-    }
-}
-
-// Add global font size control to main view
-function addGlobalFontSizeControl() {
-    const mainView = document.getElementById('main-view');
-    if (!mainView) return;
-    
-    const container = document.createElement('div');
-    container.className = 'font-size-control';
-    container.style.padding = '15px';
-    container.style.marginTop = '20px';
-    container.style.borderTop = '1px solid #ccc';
-    
-    container.innerHTML = `
-        <h3>Display Settings</h3>
-        <div class="control-row">
-            <label for="global-font-size" class="control-label">Font Size: <span id="font-size-display">${globalFontSize}</span>pt</label>
-            <input type="range" id="global-font-size" class="slider" min="12" max="36" value="${globalFontSize}">
-        </div>
-    `;
-    
-    mainView.appendChild(container);
-    
-    // Set up font size slider
-    const fontSizeSlider = document.getElementById('global-font-size');
-    if (fontSizeSlider) {
-        fontSizeSlider.addEventListener('input', function() {
-            globalFontSize = parseInt(this.value);
-            document.getElementById('font-size-display').textContent = globalFontSize;
-            saveGlobalPreferences();
-        });
-    }
-}
 
 // Show gig view and load current song
 function showGigView() {
-    console.log('showGigView called');
+    if (!currentGigSetlist || currentGigSetlist.songs.length === 0) return;
     
-    if (!currentGigSetlist || currentGigSetlist.songs.length === 0) {
-        console.error('No setlist or empty setlist');
-        return;
-    }
-    
-    // Load the first song
     loadGigSong(currentGigSongIndex);
     
-    // Hide setlist view, show gig view
     setlistDetailView.classList.add('hidden');
     gigView.classList.remove('hidden');
     
-    // Ensure navigation buttons are hidden
-    hideNavButtons();
-    
-    // Fix scrolling button position
-    fixScrollButtonPosition();
-    
-    console.log('Gig view displayed');
-}
-
-// Fix the position of the scrolling button
-function fixScrollButtonPosition() {
-    const btnBar = document.querySelector('.btn-bar');
-    if (btnBar) {
-        btnBar.style.position = 'fixed';
-        btnBar.style.bottom = '20px';
-        btnBar.style.left = '0';
-        btnBar.style.right = '0';
-        btnBar.style.textAlign = 'center';
-        btnBar.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        btnBar.style.padding = '10px';
-        btnBar.style.boxShadow = '0 -2px 10px rgba(0,0,0,0.1)';
-        btnBar.style.zIndex = '100';
-    }
-    
-    const lyricsContainer = document.querySelector('.lyrics-container');
-    if (lyricsContainer) {
-        lyricsContainer.style.paddingBottom = '70px';
-    }
+    // Make sure buttons are properly set up when view is shown
+    setupScrollListeners();
 }
 
 // Load song in gig view
 function loadGigSong(index) {
-    console.log(`Loading gig song at index: ${index}`);
+    if (!currentGigSetlist || index < 0 || index >= currentGigSetlist.songs.length) return;
     
-    if (!currentGigSetlist || index < 0 || index >= currentGigSetlist.songs.length) {
-        console.error('Invalid song index or no setlist');
-        return;
-    }
-    
-    // Stop any active scrolling
     stopScrolling();
     
-    // Update the current index
     currentGigSongIndex = index;
-    
-    // Get the song
     const songId = currentGigSetlist.songs[index];
     const song = getSongById(songId);
     
     if (song) {
-        // Update UI with song info
         gigSongTitle.textContent = song.title;
         gigLyricsText.textContent = song.lyrics;
         
-        // Apply global font size
-        gigLyricsText.style.fontSize = `${globalFontSize}px`;
+        // Set the font size - use song-specific if available or default to 18
+        const fontSize = song.fontSize || 18;
+        gigLyricsText.style.fontSize = `${fontSize}px`;
         
         // Get song-specific scroll speed if available
         currentScrollSpeed = song.scrollSpeed || 5;
@@ -170,10 +56,6 @@ function loadGigSong(index) {
         
         // Update position indicator
         songPosition.textContent = `${index + 1}/${currentGigSetlist.songs.length}`;
-        
-        console.log(`Loaded song: ${song.title}`);
-    } else {
-        console.error(`Song not found with ID: ${songId}`);
     }
 }
 
@@ -191,24 +73,80 @@ function goToNextSong() {
     }
 }
 
-// Start scrolling lyrics in the gig view
-function startGigScrolling() {
-    console.log('Start gig scrolling called');
-    
-    if (isScrolling) {
-        console.log('Already scrolling, ignoring call');
-        return;
+// Set up listeners for scrolling controls - called every time gig view is shown
+function setupScrollListeners() {
+    // Start scrolling button
+    if (gigScrollBtn) {
+        // Remove existing listeners
+        const newButton = gigScrollBtn.cloneNode(true);
+        gigScrollBtn.parentNode.replaceChild(newButton, gigScrollBtn);
+        
+        // Add fresh listener to the new button
+        newButton.addEventListener('click', function() {
+            if (!isScrolling) {
+                startGigScrolling();
+            } else {
+                stopScrolling();
+            }
+        });
     }
     
-    isScrolling = true;
+    // Exit gig button
+    if (exitGigBtn) {
+        // Remove existing listeners
+        const newExitBtn = exitGigBtn.cloneNode(true);
+        exitGigBtn.parentNode.replaceChild(newExitBtn, exitGigBtn);
+        
+        // Add fresh listener
+        newExitBtn.addEventListener('click', function() {
+            stopScrolling();
+            setlistDetailView.classList.remove('hidden');
+            gigView.classList.add('hidden');
+        });
+    }
     
-    // Update UI
+    // Set up swipe detection for song navigation
+    gigView.addEventListener('touchstart', handleTouchStart, false);
+    gigView.addEventListener('touchend', handleTouchEnd, false);
+}
+
+// Touch handlers for swiping
+let xDown = null;
+function handleTouchStart(evt) {
+    xDown = evt.touches[0].clientX;
+}
+
+function handleTouchEnd(evt) {
+    if (!xDown) return;
+    
+    const xUp = evt.changedTouches[0].clientX;
+    const xDiff = xDown - xUp;
+    
+    // Detect left/right swipe - threshold of 50 pixels
+    if (Math.abs(xDiff) > 50) {
+        if (xDiff > 0) {
+            // Swiped left - next song
+            goToNextSong();
+        } else {
+            // Swiped right - previous song
+            goToPreviousSong();
+        }
+    }
+    
+    // Reset touch point
+    xDown = null;
+}
+
+// Start scrolling lyrics in the gig view
+function startGigScrolling() {
+    if (isScrolling) return;
+    
+    isScrolling = true;
     gigScrollBtn.textContent = 'Stop Scrolling';
-    scrollControls.classList.remove('hidden');
     
     // Calculate scroll parameters
     const scrollHeight = gigLyricsScroll.scrollHeight - gigLyricsScroll.clientHeight;
-    const pixelsPerSecond = BASE_SCROLL_SPEED * currentScrollSpeed / 10; // Adjusted for smoother scrolling
+    const pixelsPerSecond = BASE_SCROLL_SPEED * (currentScrollSpeed / 10);
     
     let lastTimestamp = null;
     
@@ -223,7 +161,6 @@ function startGigScrolling() {
         const pixelsToScroll = (elapsed / 1000) * pixelsPerSecond;
         
         gigLyricsScroll.scrollTop += pixelsToScroll;
-        
         lastTimestamp = timestamp;
         
         // Continue scrolling if not at the end
@@ -235,14 +172,10 @@ function startGigScrolling() {
     }
     
     scrollAnimationId = requestAnimationFrame(animateScroll);
-    console.log('Scrolling started');
 }
 
 // Stop scrolling
 function stopScrolling() {
-    if (!isScrolling) return;
-    
-    console.log('Stopping scrolling');
     isScrolling = false;
     
     if (scrollAnimationId) {
@@ -251,107 +184,68 @@ function stopScrolling() {
     }
     
     // Reset UI
-    gigScrollBtn.textContent = 'Start Scrolling';
-    scrollControls.classList.add('hidden');
+    if (gigScrollBtn) {
+        gigScrollBtn.textContent = 'Start Scrolling';
+    }
 }
 
 // Adjust scrolling speed
 function adjustScrollSpeed(delta) {
-    // Change speed immediately even if scrolling
     currentScrollSpeed = Math.max(1, Math.min(10, currentScrollSpeed + delta));
-    console.log(`Scroll speed adjusted to: ${currentScrollSpeed}`);
     
-    // Save the speed to the current song
-    if (currentGigSetlist && currentGigSongIndex !== null) {
-        const songId = currentGigSetlist.songs[currentGigSongIndex];
-        const songIndex = songs.findIndex(s => s.id === songId);
-        if (songIndex >= 0) {
-            songs[songIndex].scrollSpeed = currentScrollSpeed;
-            saveData(); // Make sure this function exists in your code
-            console.log(`Saved scroll speed ${currentScrollSpeed} for song ${songs[songIndex].title}`);
-        }
-    }
+    // If we're in the middle of scrolling, we don't need to restart
+    // The next animation frame will use the new speed
 }
 
 // Exit gig mode
 function exitGig() {
-    console.log('Exiting gig mode');
     stopScrolling();
-    showSetlistDetail(currentSetlistIndex);
+    gigView.classList.add('hidden');
+    setlistDetailView.classList.remove('hidden');
 }
 
-// Setup gig navigation events
-function setupScrollerEvents() {
-    console.log('Setting up scroller events');
-    
-    // Ensure the button has the correct event listener
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup event listeners when the DOM is loaded
     if (gigScrollBtn) {
-        // Remove any existing listeners
-        gigScrollBtn.replaceWith(gigScrollBtn.cloneNode(true));
-        // Get the fresh element
-        const freshButton = document.getElementById('gig-scroll-btn');
-        
-        if (freshButton) {
-            freshButton.addEventListener('click', function() {
-                console.log('Scroll button clicked');
-                if (!isScrolling) {
-                    startGigScrolling();
-                } else {
-                    stopScrolling();
-                }
-            });
-            console.log('Added event listener to gig scroll button');
-        } else {
-            console.error('Could not find gig scroll button after cloning');
-        }
-    } else {
-        console.error('Gig scroll button not found');
+        gigScrollBtn.addEventListener('click', function() {
+            if (!isScrolling) {
+                startGigScrolling();
+            } else {
+                stopScrolling();
+            }
+        });
     }
     
-    // Gig navigation
     if (exitGigBtn) {
         exitGigBtn.addEventListener('click', exitGig);
-        console.log('Added event listener to exit button');
     }
     
-    // Scroll controls
+    // Set up the swipe handlers
+    if (gigView) {
+        gigView.addEventListener('touchstart', handleTouchStart, false);
+        gigView.addEventListener('touchend', handleTouchEnd, false);
+    }
+    
+    // Speed adjustment buttons
     if (scrollSlowerBtn) {
-        scrollSlowerBtn.addEventListener('click', () => adjustScrollSpeed(-1));
+        scrollSlowerBtn.addEventListener('click', function() {
+            adjustScrollSpeed(-1);
+        });
+    }
+    
+    if (scrollFasterBtn) {
+        scrollFasterBtn.addEventListener('click', function() {
+            adjustScrollSpeed(1);
+        });
     }
     
     if (scrollStopBtn) {
         scrollStopBtn.addEventListener('click', stopScrolling);
     }
-    
-    if (scrollFasterBtn) {
-        scrollFasterBtn.addEventListener('click', () => adjustScrollSpeed(1));
-    }
-    
-    // Handle swipe for next/previous songs
-    let touchStartX = 0;
-    
-    gigView.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-    
-    gigView.addEventListener('touchend', e => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const swipeThreshold = 100;
-        
-        if (touchStartX - touchEndX > swipeThreshold) {
-            // Swiped left, go to next song
-            console.log('Swiped left, going to next song');
-            goToNextSong();
-        } else if (touchEndX - touchStartX > swipeThreshold) {
-            // Swiped right, go to previous song
-            console.log('Swiped right, going to previous song');
-            goToPreviousSong();
-        }
-    });
-    
-    console.log('Scroller events setup complete');
-}
+});
 
-// This makes sure the function is globally available
+// Make showGigView available globally
 window.showGigView = showGigView;
-console.log('scroller.js loaded successfully, showGigView is now global');
+
+console.log('scroller.js loaded - Simplified version');
