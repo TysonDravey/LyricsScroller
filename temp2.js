@@ -1,54 +1,30 @@
-// Add this to your app.js file if it doesn't already have something similar
+<!-- Update this section in your index.html -->
 
-// DOM Elements - Main Navigation
-const mainView = document.getElementById('main-view');
-const songsTab = document.getElementById('songs-tab');
-const setlistsTab = document.getElementById('setlists-tab');
-const songsContent = document.getElementById('songs-content');
-const setlistsContent = document.getElementById('setlists-content');
-
-// Initialize the application
-function initApp() {
-    // Load data first
-    loadData();
+<!-- Gig Performance View -->
+<div id="gig-view" class="container hidden">
+    <header>
+        <a href="#" id="exit-gig-btn" class="back-link">Exit Gig</a>
+        <h1 id="gig-song-title">Song Title</h1>
+        <span id="song-position">1/10</span>
+    </header>
     
-    // Setup UI events
-    setupSongEvents();
-    setupSetlistEvents();
-    setupTabEvents();
+    <!-- The navigation buttons div will be removed by the JS -->
+    <div class="nav-controls">
+        <button id="prev-song-btn" class="btn btn-primary">← Previous</button>
+        <button id="next-song-btn" class="btn btn-primary">Next →</button>
+    </div>
     
-    // Additional setup
-    console.log('App initialized successfully');
-}
+    <div class="lyrics-container">
+        <div id="gig-lyrics-scroll" class="lyrics-scroll">
+            <pre id="gig-lyrics-text" class="lyrics"></pre>
+        </div>
+    </div>
 
-// Setup tab navigation
-function setupTabEvents() {
-    songsTab.addEventListener('click', () => {
-        songsTab.classList.add('active');
-        setlistsTab.classList.remove('active');
-        songsContent.classList.remove('hidden');
-        setlistsContent.classList.add('hidden');
-    });
-    
-    setlistsTab.addEventListener('click', () => {
-        setlistsTab.classList.add('active');
-        songsTab.classList.remove('active');
-        setlistsContent.classList.remove('hidden');
-        songsContent.classList.add('hidden');
-    });
-}
+    <div class="btn-bar">
+        <button id="gig-scroll-btn" class="btn btn-success">Start Scrolling</button>
+    </div>
 
-// Return to main view
-function showMainView() {
-    songDetailView.classList.add('hidden');
-    songEditView.classList.add('hidden');
-    setlistDetailView.classList.add('hidden');
-    setlistEditView.classList.add('hidden');
-    gigView.classList.add('hidden');
-    mainView.classList.remove('hidden');
-}
-
-// Initialize the app when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initApp();
-});
+    <div id="scroll-controls" class="scroll-controls hidden">
+        <!-- This will be populated by JavaScript -->
+    </div>
+</div>

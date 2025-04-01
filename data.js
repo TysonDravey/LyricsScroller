@@ -43,11 +43,13 @@ let scrollAnimationId = null;
 let editingIndex = null;
 let editingSetlistIndex = null;
 let currentScrollSpeed = 5;
+let globalFontSize = 18; // Default font size
 
 // Load data from local storage
 function loadData() {
     const storedSongs = localStorage.getItem('gig-lyrics-songs');
     const storedSetlists = localStorage.getItem('gig-lyrics-setlists');
+    const storedPreferences = localStorage.getItem('gig-lyrics-preferences');
     
     if (storedSongs) {
         songs = JSON.parse(storedSongs);
@@ -63,8 +65,23 @@ function loadData() {
         saveData();
     }
     
+    if (storedPreferences) {
+        const prefs = JSON.parse(storedPreferences);
+        globalFontSize = prefs.fontSize || 18;
+    } else {
+        savePreferences();
+    }
+    
     renderSongList();
     renderSetlistsList();
+}
+
+// Save global preferences
+function savePreferences() {
+    const prefs = {
+        fontSize: globalFontSize
+    };
+    localStorage.setItem('gig-lyrics-preferences', JSON.stringify(prefs));
 }
 
 // Save all data to local storage
